@@ -1,6 +1,9 @@
 import re
 from psyki.logic import Formula
 from psyki.logic.datalog import get_formula_from_string
+from psyki.logic.datalog.grammar.adapters.tuppy import prolog_to_datalog
+from psyki.logic.prolog.grammar.adapters.tuppy import file_to_prolog
+
 from knowledge import PATH as KNOWLEDGE_PATH
 
 # Splice junction variables
@@ -131,5 +134,6 @@ def load_splice_junction_knowledge() -> list[Formula]:
 
 
 # Breast cancer utility function
-def load_breast_cancer_knowledge():
-    pass
+def load_breast_cancer_knowledge() -> list[Formula]:
+    knowledge = file_to_prolog(KNOWLEDGE_PATH / 'breast-cancer-kb.pl')
+    return prolog_to_datalog(knowledge, trainable=True)
