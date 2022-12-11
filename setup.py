@@ -1,6 +1,8 @@
 import distutils.cmd
 from setuptools import setup, find_packages
-from utils import run_experiments, extract_knowledge, compute_statistics
+from figures import confusion_matrix_figure
+from utils import run_experiments, extract_knowledge
+from statistics import compute_statistics
 
 
 class RunExperiments(distutils.cmd.Command):
@@ -50,6 +52,21 @@ class ComputeStatistics(distutils.cmd.Command):
         compute_statistics()
 
 
+class GenerateFigures(distutils.cmd.Command):
+    description = 'generates figures that summarise experiments'
+    user_options = []
+
+    def initialize_options(self) -> None:
+        pass
+
+    def finalize_options(self) -> None:
+        pass
+
+    def run(self) -> None:
+        confusion_matrix_figure()  # splice junction rules confusion matrix
+        confusion_matrix_figure('b')  # breast cancer rules confusion matrix
+
+
 setup(
     name='kins',  # Required
     description='KINS knowledge injection algorithm test',
@@ -83,5 +100,6 @@ setup(
         'run_experiments': RunExperiments,
         'extract_knowledge': ExtractKnowledge,
         'compute_statistics': ComputeStatistics,
+        'generate_figures': GenerateFigures,
     },
 )

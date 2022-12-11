@@ -5,3 +5,4 @@ psyke~=0.3.2.dev8
 psyki~=0.2.13
 scikit-learn~=1.1.3
 tensorflow~=2.7.0
+mlxtend~=0.21.0
