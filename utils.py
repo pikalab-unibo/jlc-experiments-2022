@@ -13,10 +13,8 @@ from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import Callback
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import clone_model
-from tensorflow.python.keras import Model
 from tuprolog.solve.prolog import prolog_solver
 from tuprolog.theory import mutable_theory
-
 from dataset import load_splice_junction_dataset, load_breast_cancer_dataset, SPLICE_JUNCTION_CLASS_MAPPING
 from knowledge import load_splice_junction_knowledge, load_breast_cancer_knowledge, PATH
 from results import PATH as RESULTS_PATH
@@ -96,7 +94,6 @@ class Conditions(Callback):
 
 def k_fold_cross_validation(name: str, dataset: pd.DataFrame, net: Model, kb: list[Formula], k: int = 10,
                             population: int = 30, seed: int = SEED, epochs: int = EPOCHS, batch_size: int = BATCH_SIZE):
-
     def compile_nets(nets: Iterable[Model]):
         for n in nets:
             n.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=METRICS)
@@ -110,10 +107,10 @@ def k_fold_cross_validation(name: str, dataset: pd.DataFrame, net: Model, kb: li
     omega = SPLICE_JUNCTION_OMEGA if name == 's' else BREAST_CANCER_OMEGA
     kbann = Injector.kbann(net, feature_mapping, omega=omega, gamma=0)
     for p in range(population):
-        print(f"\nPopulation {p+1} out of {population}")
+        print(f"\nPopulation {p + 1} out of {population}")
         set_seed(seed + p)
-        train = dataset.sample(frac=1, random_state=seed+p)
-        k_fold = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed+p)
+        train = dataset.sample(frac=1, random_state=seed + p)
+        k_fold = StratifiedKFold(n_splits=k, shuffle=True, random_state=seed + p)
         k = 0
         for train_idx, valid_idx in k_fold.split(train.iloc[:, :-1], train.iloc[:, -1:]):
             k += 1
@@ -130,14 +127,13 @@ def k_fold_cross_validation(name: str, dataset: pd.DataFrame, net: Model, kb: li
             y_kbann = np.asarray(np.argmax(kbann_net.predict(valid_x), axis=1))
             results = pd.DataFrame([valid_y.to_numpy(), y_vanilla, y_kins, y_kbann]).T
             results.columns = ["y_true", "y_vanilla", "y_kins", "y_kbann"]
-            results.to_csv(RESULTS_PATH / (name + "_p" + str(p + 1) + "_k" + str(k) + "_s" + str(seed) + ".csv"), index=False)
+            results.to_csv(RESULTS_PATH / (name + "_p" + str(p + 1) + "_k" + str(k) + "_s" + str(seed) + ".csv"),
+                           index=False)
 
 
 def get_neurons_per_layer(input_shape, output_shape) -> list[int]:
-    neurons_per_layer = []
-    first_hidden_layer_neurons = math.ceil(math.log2(input_shape))**2
-    neurons_per_layer.append(first_hidden_layer_neurons)
-    neurons_per_layer.append(output_shape)
+    neurons_per_layer = [10, output_shape]
+    # first_hidden_layer_neurons = math.ceil((math.ceil(math.log2(input_shape)) ** 2)/2)
     return neurons_per_layer
 
 
@@ -179,7 +175,7 @@ def extract_knowledge(seed: int = 0, train_size: int = 200, epochs: int = 100, b
     knowledge = cart.extract(train)
     solver = prolog_solver(static_kb=mutable_theory(knowledge))
     substitutions = [solver.solveOnce(data_to_struct(data.astype(int))) for _, data in dataset.iterrows()]
-    y_pred = [str(query.solved_query.get_arg_at(dataset.shape[1]-1)) for query in substitutions if query.is_yes]
+    y_pred = [str(query.solved_query.get_arg_at(dataset.shape[1] - 1)) for query in substitutions if query.is_yes]
     y_pred = [0 if y == "'0'" else 1 for y in y_pred]
     rule_results = pd.DataFrame([dataset.diagnosis.to_list(), y_pred]).T
     rule_results.columns = ['y_true', 'y_rules']
@@ -193,8 +189,26 @@ def extract_knowledge(seed: int = 0, train_size: int = 200, epochs: int = 100, b
     matrix.to_csv(STATISTICS_PATH / "breast-cancer-rules.csv")
     textual_knowledge = pretty_theory(knowledge)
     textual_knowledge = re.sub(r"([A-Z][a-zA-Z0-9]*)[ ]>[ ]([+-]?([0-9]*))[.]?[0-9]+", r"\g<1>", textual_knowledge)
-    textual_knowledge = re.sub(r"([A-Z][a-zA-Z0-9]*)[ ]=<[ ]([+-]?([0-9]*))[.]?[0-9]+", r"not(\g<1>)", textual_knowledge)
+    textual_knowledge = re.sub(r"([A-Z][a-zA-Z0-9]*)[ ]=<[ ]([+-]?([0-9]*))[.]?[0-9]+", r"not(\g<1>)",
+                               textual_knowledge)
     textual_knowledge = re.sub(r"(diagnosis)\((.*, )('1')\)", r"class(\g<2>malignant)", textual_knowledge)
     textual_knowledge = re.sub(r"(diagnosis)\((.*, )('0')\)", r"class(\g<2>benign)", textual_knowledge)
+    textual_knowledge_to_latex(textual_knowledge)
     with open(PATH / "breast-cancer-kb.pl", "w") as text_file:
         text_file.write(textual_knowledge)
+
+
+def textual_knowledge_to_latex(knowledge: str):
+    results = {0: "", 1: ""}
+    classes: dict[int: str] = {0: 'benign', 1: 'malignant'}
+    for row in knowledge.split(".\n"):
+        index = 0 if 'benign' in row else 1
+        partial_result = r'\pred{class}(\bar{\var{X}}, \const{' + classes[index] + r'}) \leftarrow '
+        _, variables = row.split(':-\n')
+        variables = variables.replace(" ", "")
+        partial_result += r" \wedge ".join(r"\neg(\var{" + v[4:-1] + r"})" if "not" in v else r"\var{" + v + r"}" for v in variables.split(','))
+        partial_result += "\n" + r"\\" + "\n"
+        results[index] = results[index] + partial_result
+    with open(PATH / "breast-cancer-kb-latex.tex", "w") as text_file:
+        text_file.write(results[0])
+        text_file.write(results[1])

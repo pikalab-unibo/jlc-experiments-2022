@@ -3,6 +3,8 @@
 *.names
 results/*.csv
 statistics/*.csv
+results/old
+*.tex
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

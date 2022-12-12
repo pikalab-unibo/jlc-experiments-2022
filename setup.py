@@ -1,6 +1,6 @@
 import distutils.cmd
 from setuptools import setup, find_packages
-from figures import confusion_matrix_figure
+from figures import confusion_matrix_figure, accuracy_bar_plots
 from utils import run_experiments, extract_knowledge
 from statistics import compute_statistics
 
@@ -65,6 +65,8 @@ class GenerateFigures(distutils.cmd.Command):
     def run(self) -> None:
         confusion_matrix_figure()  # splice junction rules confusion matrix
         confusion_matrix_figure('b')  # breast cancer rules confusion matrix
+        accuracy_bar_plots()
+        accuracy_bar_plots('b')
 
 
 setup(
