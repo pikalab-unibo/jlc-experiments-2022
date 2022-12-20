@@ -1,7 +1,7 @@
 import distutils.cmd
 from setuptools import setup, find_packages
 from figures import confusion_matrix_figure, accuracy_bar_plots
-from utils import run_experiments, extract_knowledge
+from utils import run_experiments, extract_knowledge, estimate_best_omega
 from statistics import compute_statistics
 
 
@@ -38,6 +38,20 @@ class ExtractKnowledge(distutils.cmd.Command):
         extract_knowledge()
 
 
+class EstimateBestOmega(distutils.cmd.Command):
+    description = 'extract knowledge for the wisconsin breast cancer dataset'
+    user_options = []
+
+    def initialize_options(self) -> None:
+        pass
+
+    def finalize_options(self) -> None:
+        pass
+
+    def run(self) -> None:
+        estimate_best_omega()
+
+
 class ComputeStatistics(distutils.cmd.Command):
     description = 'compute statistics for both datasets experiments'
     user_options = []
@@ -65,8 +79,8 @@ class GenerateFigures(distutils.cmd.Command):
     def run(self) -> None:
         confusion_matrix_figure()  # splice junction rules confusion matrix
         confusion_matrix_figure('b')  # breast cancer rules confusion matrix
-        accuracy_bar_plots()
-        accuracy_bar_plots('b')
+        accuracy_bar_plots()  # splice junction per class accuracy
+        accuracy_bar_plots('b')  # breast cancer accuracy
 
 
 setup(
@@ -91,7 +105,7 @@ setup(
     python_requires='>=3.9.0, <3.10',
     install_requires=[
         'psyki>=0.2.10',
-        'psyke>=0.3.2.dev8'
+        'psyke>=0.3.2.dev8',
         'tensorflow>=2.7.0',
         'numpy>=1.22.3',
         'scikit-learn>=1.0.2',
@@ -103,5 +117,6 @@ setup(
         'extract_knowledge': ExtractKnowledge,
         'compute_statistics': ComputeStatistics,
         'generate_figures': GenerateFigures,
+        'estimate_best_omega': EstimateBestOmega,
     },
 )

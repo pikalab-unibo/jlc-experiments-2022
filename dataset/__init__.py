@@ -7,7 +7,8 @@ BREAST_CANCER_DATA_URL: str = UCI_URL + "breast-cancer-wisconsin/breast-cancer-w
 
 # Splice junction variables
 SPLICE_JUNCTION_FEATURES = ['a', 'c', 'g', 't']
-SPLICE_JUNCTION_CLASS_MAPPING = {'ei': 0, 'ie': 1, 'n': 2}
+SPLICE_JUNCTION_CLASS_MAPPING_SHORT = {'ei': 0, 'ie': 1, 'n': 2}
+SPLICE_JUNCTION_CLASS_MAPPING = {'exon-intron': 0, 'intron-exon': 1, 'none': 2}
 SPLICE_JUNCTION_AGGREGATE_FEATURE = {'a': ('a',),
                                      'c': ('c',),
                                      'g': ('g',),
@@ -53,7 +54,7 @@ def load_splice_junction_dataset() -> pd.DataFrame:
         features.append(label.lower())
         x.append(features)
     df = pd.DataFrame(x)
-    class_mapping = SPLICE_JUNCTION_CLASS_MAPPING
+    class_mapping = SPLICE_JUNCTION_CLASS_MAPPING_SHORT
     new_y = df.iloc[:, -1:].applymap(lambda y: class_mapping[y] if y in class_mapping.keys() else y)
     new_x = binarize_features(df.iloc[:, :-1], SPLICE_JUNCTION_AGGREGATE_FEATURE)
     new_y.columns = [new_x.shape[1]]

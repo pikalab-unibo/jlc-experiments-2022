@@ -4,7 +4,7 @@ from psyki.logic import Formula
 from psyki.logic.datalog import get_formula_from_string
 from psyki.logic.datalog.grammar.adapters.tuppy import prolog_to_datalog
 from psyki.logic.prolog.grammar.adapters.tuppy import file_to_prolog
-from dataset import SPLICE_JUNCTION_CLASS_MAPPING, SPLICE_JUNCTION_AGGREGATE_FEATURE
+from dataset import SPLICE_JUNCTION_CLASS_MAPPING_SHORT, SPLICE_JUNCTION_AGGREGATE_FEATURE
 
 PATH = Path(__file__).parents[0]
 # Ad-hoc symbols for the provided knowledge for splice junction task
@@ -97,7 +97,7 @@ def load_splice_junction_knowledge() -> list[Formula]:
         name, op, rest = re.split(RULE_DEFINITION_SYMBOLS_REGEX, rule)
         name = re.sub('-', '_', name.lower())
         rhs = parse_splice_junction_clause(rest)
-        if name in SPLICE_JUNCTION_CLASS_MAPPING.keys():
+        if name in SPLICE_JUNCTION_CLASS_MAPPING_SHORT.keys():
             new_rules.append('class(' + name + ')' + (STATIC_IMPLICATION_SYMBOL if op == STATIC_RULE_SYMBOL else MUTABLE_IMPLICATION_SYMBOL) + rhs)
         new_rules.append(name + '(' + ')' + (STATIC_IMPLICATION_SYMBOL if op == STATIC_RULE_SYMBOL else MUTABLE_IMPLICATION_SYMBOL) + rhs)
     results = []

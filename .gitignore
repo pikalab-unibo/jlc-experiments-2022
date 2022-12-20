@@ -5,6 +5,7 @@ results/*.csv
 statistics/*.csv
 results/old
 *.tex
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
