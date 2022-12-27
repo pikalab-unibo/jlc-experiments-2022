@@ -46,51 +46,6 @@ def get_neurons_per_layer(input_shape, output_shape) -> list[int]:
     return [int(input_shape/6), output_shape]
 
 
-def estimate_best_omega(name: str = 's'):
-    if name == 's':  # s stands for splice junction
-        dataset: pd.DataFrame = load_splice_junction_dataset()
-        kb: list[Formula] = load_splice_junction_knowledge()
-        output_shape: int = len(SPLICE_JUNCTION_CLASS_MAPPING_SHORT.keys())
-    else:
-        dataset: pd.DataFrame = load_breast_cancer_dataset()
-        kb: list[Formula] = load_breast_cancer_knowledge()
-        output_shape: int = 2
-    net = create_neural_network(dataset.shape[1] - 1, get_neurons_per_layer(dataset.shape[1] - 1, output_shape))
-    net.compile(optimizer=OPTIMIZER, loss=LOSS, metrics="accuracy")
-    # net.summary()
-    feature_mapping = {f: i for i, f in enumerate(dataset.columns[:-1])}
-    best_acc, best_omega = 0, 0
-    for omega in np.arange(0, 5, 0.05):
-        set_seed(SEED)
-        kbann = Injector.kbann(net, feature_mapping, omega=float(omega), gamma=0)
-        if name == 's':
-            df, _ = train_test_split(dataset, train_size=1000, stratify=dataset.iloc[:, -1], random_state=SEED)
-        else:
-            df = dataset
-        train = df.sample(frac=1, random_state=SEED)
-        k_fold = StratifiedKFold(n_splits=10, shuffle=True, random_state=SEED)
-        list_of_list_of_indices = list(k_fold.split(train.iloc[:, :-1], train.iloc[:, -1:]))
-        total_acc = 0
-        for indices in list_of_list_of_indices:
-            train_idx, valid_idx = indices
-            train_x, train_y = train.iloc[train_idx, :-1], train.iloc[train_idx, -1:]
-            valid_x, valid_y = train.iloc[valid_idx, :-1], train.iloc[valid_idx, -1]
-            early_stop = Conditions(train_x, train_y)
-            kbann_net = kbann.inject(kb)
-            kbann_net.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=METRICS)
-            kbann_net.fit(train_x, train_y, epochs=EPOCHS, batch_size=BATCH_SIZE, verbose=0, callbacks=early_stop)
-            _, acc = kbann_net.evaluate(valid_x, valid_y, verbose=0)
-            total_acc += acc
-        total_acc /= 10
-        print(total_acc)
-        print(omega)
-        if total_acc > best_acc:
-            best_omega = omega
-            best_acc = total_acc
-    print(best_omega)
-    print(best_acc)
-
-
 class Conditions(Callback):
     def __init__(self, train_x, train_y, patience: int = 5, threshold: float = 0.25, stop_threshold_1: float = 0.99,
                  stop_threshold_2: float = 0.9):

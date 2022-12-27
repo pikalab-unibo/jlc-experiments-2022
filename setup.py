@@ -1,7 +1,7 @@
 import distutils.cmd
 from setuptools import setup, find_packages
 from figures import confusion_matrix_figure, accuracy_bar_plots
-from utils import run_experiments, extract_knowledge, estimate_best_omega
+from utils import run_experiments, extract_knowledge
 from statistics import compute_statistics
 
 
@@ -36,20 +36,6 @@ class ExtractKnowledge(distutils.cmd.Command):
 
     def run(self) -> None:
         extract_knowledge()
-
-
-class EstimateBestOmega(distutils.cmd.Command):
-    description = 'extract knowledge for the wisconsin breast cancer dataset'
-    user_options = []
-
-    def initialize_options(self) -> None:
-        pass
-
-    def finalize_options(self) -> None:
-        pass
-
-    def run(self) -> None:
-        estimate_best_omega()
 
 
 class ComputeStatistics(distutils.cmd.Command):
@@ -117,6 +103,5 @@ setup(
         'extract_knowledge': ExtractKnowledge,
         'compute_statistics': ComputeStatistics,
         'generate_figures': GenerateFigures,
-        'estimate_best_omega': EstimateBestOmega,
     },
 )
